@@ -1,0 +1,19 @@
+digraph {
+	graph [nodesep=0.5 overlap=false rankdir=LR ranksep=0.1 splines=true]
+	0 [label=0 color="\"black\"" fillcolor="\"none\"" shape=ellipse style="\"\""]
+	1 [label=1 color="\"black\"" fillcolor="\"none\"" shape=ellipse style="\"\""]
+	phantominitSinit [label="\"\"" shape=none width=0]
+	Sinit [label=Sinit color="\"black\"" fillcolor="\"none\"" shape=ellipse style="\"\""]
+	0 -> 0 [label="\"work:False\\n/wall:False\\n/corridor:False\\n/bench:False\\n/home:True\\n/loc:26\\n\"" color=black]
+	0 -> 1 [label="\"work:True\\n/wall:False\\n/corridor:False\\n/bench:False\\n/home:True\\n/loc:26\\n\"" color=black]
+	1 -> 0 [label="\"work:False\\n/wall:False\\n/corridor:False\\n/bench:False\\n/home:True\\n/loc:26\\n\"" color=black]
+	1 -> 1 [label="\"work:True\\n/wall:False\\n/corridor:False\\n/bench:False\\n/home:True\\n/loc:26\\n\"" color=black]
+	phantominitSinit -> Sinit
+	Sinit -> 0 [label="\"work:False\\n/wall:False\\n/corridor:False\\n/bench:False\\n/home:True\\n/loc:26\\n\"" color=black]
+	Sinit -> 1 [label="\"work:True\\n/wall:False\\n/corridor:False\\n/bench:False\\n/home:True\\n/loc:26\\n\"" color=black]
+	{
+		graph [rank=source]
+		Sinit
+		phantominitSinit
+	}
+}

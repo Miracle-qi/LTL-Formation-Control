@@ -19,7 +19,7 @@ input_bound = 1.0
 uncertainty = 0.01
 
 # Continuous state space
-_state_space = np.array([[0., 3.], [0., 2.]])
+_state_space = np.array([[-1., 1.], [-1., 1.]])
 
 
 # Continuous dynamics
@@ -34,9 +34,9 @@ _W = uncertainty * np.array([[-1., 1.], [-1., 1.]])
 
 
 # 3 agents
-A = sp.linalg.block_diag(_A, _A, _A)
-B = sp.linalg.block_diag(_B, _B, _B)
-E = sp.linalg.block_diag(_E, _E, _E)
+A = sp.linalg.block_diag(_A, _A)
+B = sp.linalg.block_diag(_B, _B)
+E = sp.linalg.block_diag(_E, _E)
 
 U = np.repeat(_U, 3, axis=0)
 W = np.repeat(_W, 3, axis=0)

@@ -30,7 +30,7 @@ from tulip.abstract.plot import plot_partition
 
 
 logging.basicConfig(level=logging.WARNING)
-show = False
+show = True
 
 # @dynamics_section@
 # Problem parameters
@@ -38,24 +38,24 @@ input_bound = 1.0
 uncertainty = 0.01
 
 # Continuous state space
-cont_state_space = box2poly([[0., 3.], [0., 2.]])
+cont_state_space = box2poly([[-1., 1.], [-1., 1.]])
 
 # Continuous dynamics
 # (continuous-state, discrete-time)
-A = np.array([[1.0, 0.], [ 0., 1.0]])
-B = np.array([[0.1, 0.], [ 0., 0.1]])
-E = np.array([[1,0], [0,1]])
+A = np.array([[1.0, 0.], [0., 1.0]])
+B = np.array([[0.1, 0.], [0., 0.1]])
+E = np.array([[1, 0], [0, 1]])
 
 # Available control, possible disturbances
-U = input_bound *np.array([[-1., 1.], [-1., 1.]])
-W = uncertainty *np.array([[-1., 1.], [-1., 1.]])
+U = input_bound * np.array([[-1., 1.], [-1., 1.]])
+W = uncertainty * np.array([[-1., 1.], [-1., 1.]])
 
 # Convert to polyhedral representation
 U = box2poly(U)
 W = box2poly(W)
 
 # Construct the LTI system describing the dynamics
-sys_dyn = hybrid.LtiSysDyn(A, B, E, None, U, W, cont_state_space)
+# sys_dyn = hybrid.LtiSysDyn(A, B, E, None, U, W, cont_state_space)
 # @dynamics_section_end@
 
 # @partition_section@

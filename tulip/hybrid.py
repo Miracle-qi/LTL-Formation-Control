@@ -99,7 +99,7 @@ class LtiSysDyn(object):
     L{PwaSysDyn}, L{SwitchedSysDyn}, C{polytope.Polytope}
     """
     def __init__(self, A=None, B=None, E=None, K=None,
-                 Uset=None,Wset=None, domain=None, time_semantics=None,
+                 Uset=None, Wset=None, domain=None, time_semantics=None,
                  timestep=None):
 
         if Uset is None:

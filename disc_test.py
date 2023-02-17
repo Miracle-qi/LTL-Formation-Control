@@ -19,7 +19,6 @@ sys.atomic_propositions.add_from({'horizon', 'triangle'})
 sys.states.add('X0', ap={'horizon'})
 sys.states.add('X1', ap={'triangle'})
 
-
 '''
 We must convert this specification into GR(1) form:
   env_init && []env_safe && []<>env_prog_1 && ... && []<>env_prog_m ->
@@ -29,20 +28,22 @@ We must convert this specification into GR(1) form:
 # My Specification: []<>Change -> []<>horizon || []<>vertical || []<>triangle
 env_vars = {'Change'}
 env_init = set()                # empty set
-env_prog = 'Change'             # How to control the time of signal?
-# env_prog |= '！Change'
+env_prog = '！Change'             # How to control the time of signal?
 env_safe = set()                # empty set
 
 # Augment the system description to make it GR(1)
 sys_vars = set()
-sys_init = set()
+sys_init = {'horizon'}
 sys_prog = set()
-sys_safe = {'(horizon -> (change -> X(triangle))) && (triangle -> (change -> X(horizon)))'}
+# sys_safe = {'(horizon -> (Change -> X(triangle))) && (triangle -> (Change -> X(horizon))) &&'
+#             ' (horizon -> (!Change -> X(horizon))) && (triangle -> (!Change -> X(triangle)))'}
+sys_safe = {'((horizon && Change) -> X(triangle)) && ((triangle && Change) -> X(horizon)) &&'
+            ' ((horizon && !Change) -> X(horizon)) && ((triangle && !Change) -> X(triangle))'}
 
-
-
-
-
+# sys_safe = {'((horizon && !triangle && Change) -> (X(triangle) && !X(horizon))) && '
+#             '((!horizon && triangle && Change) -> (!X(triangle) && X(horizon))) && '
+#             '((horizon && !triangle && !Change) -> (!X(triangle) && X(horizon))) && '
+#             '((!horizon && triangle && !Change) -> (X(triangle) && !X(horizon)))'}
 
 
 # Create the specification
@@ -59,4 +60,5 @@ specs.moore = True
 specs.qinit = r'\E \A'
 ctrl = synth.synthesize(specs, sys=sys)
 assert ctrl is not None, 'unrealizable'
+ctrl.save('./Figures/form_2_switch.png')
 print(ctrl)

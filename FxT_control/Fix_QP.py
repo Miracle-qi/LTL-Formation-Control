@@ -12,7 +12,7 @@ def FxT_QP(T_fix, cur_state, goal_point, goal_radius, obs_point, obs_radius):
 
     max_u = 3
 
-    mu = 1.3
+    mu = 1.5
     gamma_1 = 1 + 1 / mu
     gamma_2 = 1 - 1 / mu
     alpha_1 = mu * ca.pi / (2 * T_fix)
@@ -24,12 +24,12 @@ def FxT_QP(T_fix, cur_state, goal_point, goal_radius, obs_point, obs_radius):
     R = opti.variable(r_dim)
     X = opti.parameter(x_dim)
 
-    Q = ca.diag([0.001, 0.001, 12, 1])
-    F = ca.DM([0, 0, 0.1, 0])
+    Q = ca.diag([0.001, 0.001, 20, 1])
+    F = ca.DM([0, 0, 1, 0])
 
     Z = ca.vertcat(U, R)
     costs = ca.trace(Z.T @ Q @ Z) + F.T @ Z
-    opti.minimize(costs)
+    opti.minimize(costs) # Note R[0] should be non-positive to make CLF satisfied
 
     opti.subject_to(U[0] <= max_u)
     opti.subject_to(U[0] >= -max_u)
@@ -85,12 +85,13 @@ if __name__ == "__main__":
     goal_radius = 0.2
     obs_point = np.array([1, 1])
     obs_radius = 0.2
-    Fix_T = 5
+    Fix_T = 4
 
     plt.figure()
     while T <= (Fix_T * 1.5):
         opt_inputs = FxT_QP(Fix_T, sim.states, goal_point, goal_radius, obs_point, obs_radius)
         sim.update(opt_inputs)
+        # Todo: print R[0] R[1]
 
         circle1 = plt.Circle(goal_point, radius=goal_radius, color='b')
         circle2 = plt.Circle(obs_point, radius=obs_radius, color='r')
@@ -100,10 +101,10 @@ if __name__ == "__main__":
         plt.ylim((-1, 4))
         plt.plot(sim.states_traj[:, 0], sim.states_traj[:, 1], 'g')
 
-        font = {'color': 'black', 'size': 1}
+        font = {'color': 'black', 'size': 14}
         text = "Fixed Time: " + str(Fix_T) + " Real Time: " + str(round(T, 2))
         plt.text(0.0, 3.5, text, fontdict=font)
-        plt.pause(dt/3)
+        plt.pause(dt)
         plt.clf()
         T += dt
     plt.show()

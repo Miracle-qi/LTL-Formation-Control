@@ -29,7 +29,7 @@ We must convert this specification into GR(1) form:
 # My Specification: []<>Change -> []<>horizon || []<>vertical || []<>triangle
 env_vars = {'Change'}
 env_init = set()                # empty set
-env_prog = 'Change'             # How to control the time of signal?
+env_prog = '!Change'             # How to control the time of signal?
 # env_prog |= '！Change'
 env_safe = set()                # empty set
 
@@ -37,12 +37,12 @@ env_safe = set()                # empty set
 sys_vars = set()
 sys_init = {'horizon && !triangle && !vertical'}
 sys_prog = set()
-sys_safe = {'Change && (horizon && !triangle && !vertical) && (!X(horizon) && X(triangle) && !X(vertical))'}
-sys_safe |= {'!Change && (horizon && !triangle && !vertical) && (X(horizon) && !X(triangle) && !X(vertical))'}
-sys_safe |= {'Change && (!horizon && triangle && !vertical) && (!X(horizon) && !X(triangle) && X(vertical))'}
-sys_safe |= {'!Change && (!horizon && triangle && !vertical) && (!X(horizon) && X(triangle) && !X(vertical))'}
-sys_safe |= {'Change && (!horizon && !triangle && vertical) && (X(horizon) && !X(triangle) && !X(vertical))'}
-sys_safe |= {'!Change && (!horizon && !triangle && vertical) && (!X(horizon) && !X(triangle) && X(vertical))'}
+sys_safe = {'Change && (horizon && !triangle && !vertical) -> (!X(horizon) && X(triangle) && !X(vertical))'}
+sys_safe &= {'!Change && (horizon && !triangle && !vertical) -> (X(horizon) && !X(triangle) && !X(vertical))'}
+sys_safe &= {'Change && (!horizon && triangle && !vertical) -> (!X(horizon) && !X(triangle) && X(vertical))'}
+sys_safe &= {'!Change && (!horizon && triangle && !vertical) -> (!X(horizon) && X(triangle) && !X(vertical))'}
+sys_safe &= {'Change && (!horizon && !triangle && vertical) -> (X(horizon) && !X(triangle) && !X(vertical))'}
+sys_safe &= {'!Change && (!horizon && !triangle && vertical) -> (!X(horizon) && !X(triangle) && X(vertical))'}
 
 
 
