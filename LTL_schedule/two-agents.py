@@ -76,10 +76,12 @@ env_safe = set()                # empty set
 sys_vars = set()
 sys_init = {'home'}
 sys_prog = set()
-sys_safe = {'((home && work)->X(corridor)) &&'
+sys_safe = {'((bench && work)->X(bench)) &&'
+            '((home && work)->X(corridor)) &&'
             '((corridor && work)->X(bench)) &&'
             '((bench && !work)->X(corridor)) &&'
-            '((corridor && !work)->X(home))'}
+            '((corridor && !work)->X(home)) &&'
+            '((home && !work)->X(home))'}
 
 
 
