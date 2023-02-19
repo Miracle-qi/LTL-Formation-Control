@@ -15,7 +15,7 @@ class simulator:
     def __init__(self, dt, num):
         self.dt = dt
         self.agents_num = num
-        self.states = np.zeros(2 * num)
+        self.states = np.zeros(2*num)
         self.states_traj = np.array([self.states])
 
     def update(self, input):
@@ -25,26 +25,35 @@ class simulator:
 
 class FxT_QP_swarm:
     def __init__(self, num=3):
-        x_dim = 2
-        u_dim = 2
-        r_dim = 3
+        self.x_dim = 2
+        self.u_dim = 2
+        self.r_dim = 3
         self.agents_num = num
         self.mu = 1.5
-        self.max_u = 3
+        self.max_u = 10
 
         self.opti = ca.Opti()
-        self.U = self.opti.variable(u_dim * num)
-        self.R = self.opti.variable(r_dim)
-        self.X = self.opti.parameter(x_dim * num)
+        self.U = self.opti.variable(self.u_dim * num)
+        self.R = self.opti.variable(self.r_dim)
+        self.X = self.opti.parameter(self.x_dim * num)
         self.alpha_1 = self.opti.parameter(1)
         self.alpha_2 = self.opti.parameter(1)
         self.form_topo = self.opti.parameter(num, 2)
 
         self.Q = ca.diag([0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 20, 20, 1])
         self.F = ca.DM([0, 0, 0, 0, 0, 0, 1, 1, 0])
-        self.r_accept = 0.2
+        self.r_accept = 0.1
 
-    def setup(self, goal_point, goal_radius, obs_point, obs_radius):
+
+    def setup(self, goal_point, goal_radius, obs_flag, obs_point=[0., 0.], obs_radius=0.):
+        self.opti = ca.Opti()
+        self.U = self.opti.variable(self.u_dim * self.agents_num)
+        self.R = self.opti.variable(self.r_dim)
+        self.X = self.opti.parameter(self.x_dim * self.agents_num)
+        self.alpha_1 = self.opti.parameter(1)
+        self.alpha_2 = self.opti.parameter(1)
+        self.form_topo = self.opti.parameter(self.agents_num, 2)
+
         gamma_1 = 1 + 1 / self.mu
         gamma_2 = 1 - 1 / self.mu
 
@@ -78,14 +87,15 @@ class FxT_QP_swarm:
                                  - self.alpha_2 * ca.fmax(0, _hg) ** gamma_2)
 
             # CBF for Obstacle Avoidance
-            _hs = obs_radius**2 - (self.X[2*n]-obs_point[0])**2 - (self.X[2*n]-obs_point[1])**2
-            _d_hs = - 2 * (self.X[2*n]-obs_point[0]) * self.U[2*n] - 2 * (self.X[2*n+1]-obs_point[1]) * self.U[2*n+1]
-            self.opti.subject_to(_d_hs <= - self.R[2] * _hs)
+            if obs_flag:
+                _hs = obs_radius**2 - (self.X[2*n]-obs_point[0])**2 - (self.X[2*n]-obs_point[1])**2
+                _d_hs = - 2 * (self.X[2*n]-obs_point[0]) * self.U[2*n] - 2 * (self.X[2*n+1]-obs_point[1]) * self.U[2*n+1]
+                self.opti.subject_to(_d_hs <= - self.R[2] * _hs)
 
         ipopt_options = {
             'verbose': False,
-            "ipopt.tol": 1e-4,
-            "ipopt.acceptable_tol": 1e-4,
+            "ipopt.tol": 1e-6,
+            "ipopt.acceptable_tol": 1e-6,
             "ipopt.max_iter": 100,
             "ipopt.warm_start_init_point": "yes",
             "print_time": True
@@ -112,14 +122,14 @@ if __name__ == "__main__":
     sim = simulator(dt, agents_num)
     controller = FxT_QP_swarm()
 
-    goal_point = np.array([3, 3])
+    goal_point = np.array([4, 4])
     goal_radius = 0.1
     obs_point = np.array([1, 1])
     obs_radius = 0.2
-    controller.setup(goal_point, goal_radius, obs_point, obs_radius)
+    controller.setup(goal_point, goal_radius, False, obs_point, obs_radius)
 
-    form_topo = formation('vertical')
-    Fix_T = 6
+    form_topo = formation('horizon')
+    Fix_T = 3
 
     plt.figure()
     # plt.pause(5)

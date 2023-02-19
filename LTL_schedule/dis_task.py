@@ -86,7 +86,7 @@ class TaskSchedule:
         next_state, dum = self.ctrl.reaction(state, {'work': work_signal})
         u, v, edges = list(self.ctrl.edges(next_state, data=True))[0]
         print("Next goal: ", edges['loc'])
-        return edges['loc']
+        return next_state, edges['loc']
 
     def display(self):
         plot_partition(self.sys)
