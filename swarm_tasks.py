@@ -92,9 +92,6 @@ if __name__ == "__main__":
         plt.text(0.0, 6, text, fontdict=font)
         plt.pause(dt)
         plt.clf()
-
-
-
         T += dt
     plt.show()
 

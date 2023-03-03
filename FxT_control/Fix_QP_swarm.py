@@ -44,7 +44,6 @@ class FxT_QP_swarm:
         self.F = ca.DM([0, 0, 0, 0, 0, 0, 1, 1, 0])
         self.r_accept = 0.1
 
-
     def setup(self, goal_point, goal_radius, obs_flag, obs_point=[0., 0.], obs_radius=0.):
         self.opti = ca.Opti()
         self.U = self.opti.variable(self.u_dim * self.agents_num)
