@@ -23,53 +23,6 @@ class TaskSchedule:
         self.sampling = UniSample(self.space, self.unit, self.label_set, self.form_dict)
         self.sampling.setup()
 
-        # # My Specification:
-        # env_vars = {'work'}
-        # env_init = set()  # empty set
-        # env_prog = set()
-        # env_safe = {'( work && !bench_triangle ) -> X work'}  # empty set
-        # env_safe |= {'( work && bench_triangle ) -> X !work'}  # empty set
-        #
-        # # System allowed behavior
-        # sys_vars = set()  # {'obstacle_vertical','home_horizon','obstacle_triangle','bench_triangle','obstacle_horizon'}
-        # sys_init = {'home_horizon'}
-        # sys_safe = {'!obstacle_horizon && !obstacle_vertical && !obstacle_triangle'}
-        # sys_prog = {'home_horizon'}
-        # sys_prog |= {'!work'}
-
-        # # My Specification:
-        # env_vars = {'Task', "battery"}
-        # env_init = set()  # empty set
-        # env_prog = set()
-        # env_safe = {'( !Task && !bench_triangle ) -> X !Task'}  # empty set
-        # env_safe |= {'( !Task && bench_triangle ) -> X Task'}  # empty set
-        # env_safe |= {'( !battery && !home_horizon ) -> X !battery'}  # empty set
-        # env_safe |= {'( !battery && home_horizon ) -> X battery'}  # empty set
-        #
-        # # System allowed behavior
-        # sys_vars = set()  # {'obstacle_vertical','home_horizon','obstacle_triangle','bench_triangle','obstacle_horizon'}
-        # sys_init = {'home_horizon'}
-        # sys_safe = {'!obstacle_horizon && !obstacle_vertical && !obstacle_triangle'}
-        # # sys_prog = {'home_horizon'}
-        # sys_prog = {'Task'}
-        # sys_prog |= {'battery'}
-
-        # # My Specification:
-        # env_vars = {'Task', "Battery"}
-        # env_init = set()  # empty set
-        # env_prog = set()
-        # env_safe = {'!bench_triangle -> X !Task'}  # empty set
-        # env_safe |= {'bench_triangle -> X Task'}  # empty set
-        # env_safe |= {'(!Battery && !home_horizon) -> X !Battery'}  # empty set
-        # env_safe |= {'(!Battery && home_horizon) -> X Battery'}  # empty set
-        #
-        # # System allowed behavior
-        # sys_vars = set()  # {'obstacle_vertical','home_horizon','obstacle_triangle','bench_triangle','obstacle_horizon'}
-        # sys_init = {'home_horizon'}
-        # sys_safe = {'!obstacle_horizon && !obstacle_vertical && !obstacle_triangle'}
-        # sys_prog = {'Task'}
-        # sys_prog |= {'Battery'}
-
         # My Specification:
         env_vars = {"Battery"}
         env_init = set()  # empty set
@@ -103,14 +56,8 @@ class TaskSchedule:
         self.state_dict = states_dict
 
     def run(self, state, battery):
-        # trans = self.ctrl.transitions.find([state])
-        # outputs = project_dict(attr_dict, mealy.outputs)
-        # machines.random_run(self.ctrl, N=10)
-        # next_state, dum = self.ctrl.reaction(state, {'Task': work_signal, 'Battery': battery})
         next_state, dum = self.ctrl.reaction(state, {'Battery': battery})
-        u, v, edges = list(self.ctrl.edges(next_state, data=True))[0]
         print("currect state:", dum['loc'])
-        # return next_state, dum['loc']
         return next_state, dum
 
 

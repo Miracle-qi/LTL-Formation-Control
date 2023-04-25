@@ -1,10 +1,6 @@
 import numpy as np
 from scipy import sparse as sp
 from tulip import transys, spec, synth
-from tulip.interfaces.omega import synthesize_enumerated_streett
-
-from SymbolicReductions.SymbolicMealy import *
-from tulip.interfaces import omega as omega_int
 try:
     import omega
     from omega.logic import bitvector as bv
@@ -193,17 +189,18 @@ if __name__ == "__main__":
     sampling.test_avail_formation()
 
     # My Specification:
-    env_vars = {'work'}
+    env_vars = {"Battery"}
     env_init = set()  # empty set
-    env_prog = {'!work'}
-    env_safe = set()  # empty set
-    # Augment the system description to make it GR(1)
-    sys_vars = {'X0reach'}
+    env_prog = set()
+    env_safe = {'(!Battery && !home_horizon) -> X !Battery'}  # empty set
+    env_safe |= {'(!Battery && home_horizon) -> X (Battery)'}  # empty set
+
+    # System allowed behavior
+    sys_vars = set()  # {'obstacle_vertical','home_horizon','obstacle_triangle','bench_triangle','obstacle_horizon'}
     sys_init = {'home_horizon'}
-    sys_prog = {'home_horizon'}
-    sys_safe = {'(X (X0reach) <-> bench_triangle) || (X0reach && !work)'}
-    sys_safe |= {'!obstacle_horizon && !obstacle_vertical && !obstacle_triangle'}
-    sys_prog |= {'X0reach'}
+    sys_safe = {'!obstacle_horizon && !obstacle_vertical && !obstacle_triangle'}
+    sys_prog = {'bench_triangle'}
+    sys_prog |= {'Battery'}
 
     # Create the specification
     psi = spec.GRSpec(env_vars, sys_vars, env_init, sys_init,
