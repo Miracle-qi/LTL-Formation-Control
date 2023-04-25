@@ -107,4 +107,4 @@ if __name__ == "__main__":
         plt.pause(dt)
         plt.clf()
         T += dt
-    plt.show()
+    # plt.show()

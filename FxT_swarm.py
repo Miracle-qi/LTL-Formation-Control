@@ -1,27 +1,10 @@
+#!/usr/bin/env python3
 import casadi as ca
 import numpy as np
-import matplotlib.pyplot as plt
-
-
-def formation(form_name):
-    form_list = {'horizon': [[1, 0], [1, 0], [-2, 0]],
-                 'vertical': [[0, 1], [0, 1], [0, -2]],
-                 'triangle': [[1, 0], [-0.5, 1], [-0.5, -1]]}
-
-    return form_list[form_name]
-
-
-class simulator:
-    
-    def __init__(self, dt, num):
-        self.dt = dt
-        self.agents_num = num
-        self.states = np.zeros(2*num)
-        self.states_traj = np.array([self.states])
-
-    def update(self, input):
-        self.states += self.dt * np.array(input)
-        self.states_traj = np.append(self.states_traj, np.array([self.states]), axis=0)
+import rospy
+from nav_msgs.msg import Odometry
+# import FxT_control
+from quadrotor_msgs.msg import PositionCommand
 
 
 class FxT_QP_swarm:
@@ -30,8 +13,8 @@ class FxT_QP_swarm:
         self.u_dim = 2
         self.r_dim = 3
         self.agents_num = num
-        self.mu = 1.2
-        self.max_u = 6
+        self.mu = 1.5
+        self.max_u = 10
 
         self.opti = ca.Opti()
         self.U = self.opti.variable(self.u_dim * num)
@@ -43,8 +26,7 @@ class FxT_QP_swarm:
 
         self.Q = ca.diag([0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 20, 20, 1])
         self.F = ca.DM([0, 0, 0, 0, 0, 0, 1, 1, 0])
-        self.r_accept = 0.05
-
+        self.r_accept = 0.3
 
     def setup(self, goal_point, goal_radius, obs_flag, obs_point=(0., 0.), obs_radius=0.):
         self.opti = ca.Opti()
@@ -99,6 +81,7 @@ class FxT_QP_swarm:
             "ipopt.acceptable_tol": 1e-6,
             "ipopt.max_iter": 100,
             "ipopt.warm_start_init_point": "yes",
+            "ipopt.print_level": 0,
             "print_time": True
         }
         self.opti.solver('ipopt', ipopt_options)
@@ -109,52 +92,95 @@ class FxT_QP_swarm:
         self.opti.set_value(self.alpha_1, self.mu * ca.pi / (2 * T_fix))
         self.opti.set_value(self.alpha_2, self.mu * ca.pi / (2 * T_fix))
         self.opti.set_value(self.form_topo, np.array(form_topo))
+
         sol = self.opti.solve()
         print("\n self.optimal Input: \n", sol.value(self.U))
+
         return sol.value(self.U)
 
 
+def formation(form_name):
+    form_list = {'horizon': [[1, 0], [1, 0], [-2, 0]],
+                 'vertical': [[0, 1], [0, 1], [0, -2]],
+                 'triangle': [[2, 0], [-1, 2], [-1, -2]]}
+    return form_list[form_name]
+
+
+class SwarmNode:
+
+    def __init__(self):
+        rospy.init_node('FxT_swarm', anonymous=True)
+        self.controller = FxT_QP_swarm()
+
+        agents_num = 3
+        self.cur_state = np.zeros(2 * agents_num)
+        self.form_topo = formation('triangle')
+
+        self.odom_sub_0 = rospy.Subscriber('/odom_0', Odometry, self.callback_0)
+        self.odom_sub_1 = rospy.Subscriber('/odom_1', Odometry, self.callback_1)
+        self.odom_sub_2 = rospy.Subscriber('/odom_2', Odometry, self.callback_2)
+
+        self.cmd_pub_0 = rospy.Publisher('/cmd_0', PositionCommand, queue_size=10)
+        self.cmd_pub_1 = rospy.Publisher('/cmd_1', PositionCommand, queue_size=10)
+        self.cmd_pub_2 = rospy.Publisher('/cmd_2', PositionCommand, queue_size=10)
+
+
+    def callback_0(self, odom_data):
+        self.cur_state[0] = odom_data.pose.pose.position.x
+        self.cur_state[1] = odom_data.pose.pose.position.y
+
+    def callback_1(self, odom_data):
+        self.cur_state[2] = odom_data.pose.pose.position.x
+        self.cur_state[3] = odom_data.pose.pose.position.y
+
+    def callback_2(self, odom_data):
+        self.cur_state[4] = odom_data.pose.pose.position.x
+        self.cur_state[5] = odom_data.pose.pose.position.y
+
+    def run(self):
+        goal_point = np.array([10, 10])
+        goal_radius = 0.3
+        obs_point = np.array([1, 1])
+        obs_radius = 0.3
+        Fix_T = 5
+        self.controller.setup(goal_point, goal_radius, False, obs_point, obs_radius)
+
+        Fixed_z = 2
+        dt = 0.2
+        opt_inputs = self.controller.solve(self.cur_state, self.form_topo, Fix_T)
+
+        cmd_0 = PositionCommand()
+        cmd_0.position.x = self.cur_state[0]+ opt_inputs[0] * dt
+        cmd_0.position.y = self.cur_state[1]+ opt_inputs[1] * dt
+        cmd_0.position.z = Fixed_z
+        # cmd_0.velocity.x = float('nan')
+        # cmd_0.velocity.y = float('nan')
+        # cmd_0.velocity.z = float('nan')
+        # cmd_0.acceleration.x = float('nan')
+        # cmd_0.acceleration.y = float('nan')
+        # cmd_0.acceleration.z = float('nan')
+        self.cmd_pub_0.publish(cmd_0)
+
+        cmd_1 = PositionCommand()
+        cmd_1.position.x = self.cur_state[2] + opt_inputs[2] * dt
+        cmd_1.position.y = self.cur_state[3] + opt_inputs[3] * dt
+        cmd_1.position.z = Fixed_z
+        self.cmd_pub_1.publish(cmd_1)
+
+        cmd_2 = PositionCommand()
+        cmd_2.position.x = self.cur_state[4] + opt_inputs[4] * dt
+        cmd_2.position.y = self.cur_state[5] + opt_inputs[5] * dt
+        cmd_2.position.z = Fixed_z
+        self.cmd_pub_2.publish(cmd_2)
+        print("Current states:", self.cur_state)
+
+
 if __name__ == "__main__":
-    T = 0
-    dt = 0.01
-    agents_num = 3
-    sim = simulator(dt, agents_num)
-    controller = FxT_QP_swarm()
+    node = SwarmNode()
+    rospy.sleep(5)
+    while not rospy.is_shutdown():
+        node.run()
+        rospy.sleep(0.1)
 
-    goal_point = np.array([3, 3])
-    goal_radius = 0.2
-    obs_point = np.array([1, 1])
-    obs_radius = 0.3
-    controller.setup(goal_point, goal_radius, True, obs_point, obs_radius)
-    form_topo = formation('triangle')
-    Fix_T = 6
 
-    lin_color = 'b'
 
-    plt.figure()
-    # plt.pause(5)
-    while T <= (Fix_T * 1.5):
-        opt_inputs = controller.solve(sim.states, form_topo, Fix_T)
-        sim.update(opt_inputs)
-
-        circle1 = plt.Circle(goal_point, radius=goal_radius, color='g')
-        circle2 = plt.Circle(obs_point, radius=obs_radius, color='r')
-        plt.gca().add_patch(circle1)
-        plt.gca().add_patch(circle2)
-        plt.xlim((-0.5, 4))
-        plt.ylim((-0.5, 4))
-        plt.plot(sim.states_traj[:, 0], sim.states_traj[:, 1], color=lin_color)
-        plt.plot(sim.states_traj[:, 2], sim.states_traj[:, 3], color=lin_color)
-        plt.plot(sim.states_traj[:, 4], sim.states_traj[:, 5], color=lin_color)
-
-        plt.plot([sim.states[0], sim.states[2], sim.states[4], sim.states[0]],
-                 [sim.states[1], sim.states[3], sim.states[5], sim.states[1]],
-                 color='g', linestyle='dotted')
-
-        font = {'color': 'black', 'size': 14}
-        text = "Fixed Time: " + str(Fix_T) + " Real Time: " + str(round(T, 2))
-        plt.text(0.0, 3.5, text, fontdict=font)
-        plt.pause(dt)
-        plt.clf()
-        T += dt
-    plt.show()

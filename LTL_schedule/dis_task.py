@@ -36,7 +36,7 @@ class TaskSchedule:
         self.sys.transitions.add_comb({'X3'}, {'X2', 'X3', 'X4'})
         self.sys.transitions.add_comb({'X4'}, {'X3', 'X4'})
         # Add atomic propositions to the states
-        self.sys.atomic_propositions.add_from({'home', 'bench', 'corridor', 'corner1', 'corner2'})
+        self.sys.atomic_propositions.add_from({'home', 'bench', 'corridor', 'corner1', 'corner2', 'line'})
         self.sys.states.add('X0', ap={'home'})
         self.sys.states.add('X1', ap={'corner1'})
         self.sys.states.add('X2', ap={'corridor'})
@@ -50,22 +50,15 @@ class TaskSchedule:
         # My Specification:
         env_vars = {'work'}
         env_init = set()  # empty set
-        env_prog = '!work'  # How to control the time of signal?
+        env_prog = '!work'
         env_safe = set()  # empty set
         # Augment the system description to make it GR(1)
-        sys_vars = set()
+        sys_vars = {'X0reach'}
         sys_init = {'home'}
-        sys_prog = set()
-        sys_safe = {'((home && work)->X(corner1)) &&'
-                    '((corner1 && work)->X(corridor)) &&'
-                    '((corridor && work)->X(corner2)) &&'
-                    '((corner2 && work)->X(bench)) &&'
-                    '((bench && work)->X(bench)) &&'
-                    '((bench && !work)->X(corner2)) &&'
-                    '((corner2 && !work)->X(corridor)) &&'
-                    '((corridor && !work)->X(corner1)) &&'
-                    '((corner1 && !work)->X(home)) &&'
-                    '((home && !work)->X(home))'}
+        sys_prog = {'home'}
+        sys_safe = {'(X (X0reach) <-> bench) || (X0reach && !work)'}
+        sys_prog |= {'X0reach'}
+
 
         # Create the specification
         specs = spec.GRSpec(env_vars, sys_vars, env_init, sys_init,
@@ -101,7 +94,7 @@ if __name__ == "__main__":
     ltl_tasks.setup()
     ltl_tasks.record()
 
-    change_signal = [True, False, True]
+    change_signal = True
     ltl_tasks.run(0, change_signal)
 
 
