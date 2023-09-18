@@ -34,8 +34,8 @@ class UniSample:
         labels_set = self.labelling()
 
         # Add states and decorate TS with state labels (aka atomic propositions)
-        for state, label in zip(self.states, labels_set):
-            self.sys.states.add(state, ap=label)
+        for state, labels in zip(self.states, labels_set):
+            self.sys.states.add(state, ap=labels)
 
         # Add Transitions
         transmat = np.identity(len(self.states))
@@ -64,20 +64,17 @@ class UniSample:
                     pos = self.get_pos(n)
                     area = self.area_labels[scope]
                     if (scope[0][0] <= pos[0] <= scope[0][1]) and (scope[1][0] <= pos[1] <= scope[1][1]):
-                        labels_set[self.form_num * n + m] = {area + "_" + list(self.form_labels.keys())[m]}
+                        labels_set[self.form_num * n + m] = {area, list(self.form_labels.keys())[m]}
                         break
                     else:
-                        labels_set[self.form_num * n + m] = {"free" + "_" + list(self.form_labels.keys())[m]}
+                        labels_set[self.form_num * n + m] = {"free", list(self.form_labels.keys())[m]}
         return labels_set
 
     def get_labels_list(self):
         area_labels_list = list(set(self.area_labels.values()))
         area_labels_list.append("free")
         form_labels_list = list(set(self.form_labels.keys()))
-        labels_list = []
-        for area in area_labels_list:
-            for form in form_labels_list:
-                labels_list.append(area + "_" + form)
+        labels_list = form_labels_list + area_labels_list
         return labels_list
 
     def get_avail_formation(self, pos):
@@ -192,14 +189,14 @@ if __name__ == "__main__":
     env_vars = {"Battery"}
     env_init = set()  # empty set
     env_prog = set()
-    env_safe = {'(!Battery && !home_horizon) -> X !Battery'}  # empty set
-    env_safe |= {'(!Battery && home_horizon) -> X (Battery)'}  # empty set
+    env_safe = {'(!Battery && !home) -> X !Battery'}  # empty set
+    env_safe |= {'(!Battery && home) -> X (Battery)'}  # empty set
 
     # System allowed behavior
-    sys_vars = set()  # {'obstacle_vertical','home_horizon','obstacle_triangle','bench_triangle','obstacle_horizon'}
-    sys_init = {'home_horizon'}
-    sys_safe = {'!obstacle_horizon && !obstacle_vertical && !obstacle_triangle'}
-    sys_prog = {'bench_triangle'}
+    sys_vars = set()
+    sys_init = {'home && horizon'}
+    sys_safe = {'!obstacle'}
+    sys_prog = {'bench && triangle'}
     sys_prog |= {'Battery'}
 
     # Create the specification

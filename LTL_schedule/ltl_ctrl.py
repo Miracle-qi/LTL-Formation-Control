@@ -27,14 +27,14 @@ class TaskSchedule:
         env_vars = {"Battery"}
         env_init = set()  # empty set
         env_prog = set()
-        env_safe = {'(!Battery && !home_horizon) -> X !Battery'}  # empty set
-        env_safe |= {'(!Battery && home_horizon) -> X (Battery)'}  # empty set
+        env_safe = {'(!Battery && !home) -> X !Battery'}  # empty set
+        env_safe |= {'(!Battery && home) -> X (Battery)'}  # empty set
 
         # System allowed behavior
-        sys_vars = set()  # {'obstacle_vertical','home_horizon','obstacle_triangle','bench_triangle','obstacle_horizon'}
-        sys_init = {'home_horizon'}
-        sys_safe = {'!obstacle_horizon && !obstacle_vertical && !obstacle_triangle'}
-        sys_prog = {'bench_triangle'}
+        sys_vars = set()
+        sys_init = {'home && horizon'}
+        sys_safe = {'!obstacle'}
+        sys_prog = {'bench && triangle'}
         sys_prog |= {'Battery'}
 
         # Create the specification
@@ -82,12 +82,12 @@ if __name__ == "__main__":
     while n < 50:
         next_index, dum = ltl_tasks.run(cur_index, battery)
         cur_index = next_index
-        if dum['bench_triangle']:
+        if (dum['bench'] == True) and (dum['triangle'] == True):
             print("Achieved Task!")
         if n == 20:
             battery = False
             print("Low Battery!")
-        if dum['home_horizon']:
+        if (dum['home'] == True) and (dum['horizon'] == True):
             battery = True
             print("Fully Charged!")
         n += 1
